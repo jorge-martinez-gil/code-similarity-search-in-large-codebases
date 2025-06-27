@@ -17,7 +17,7 @@ Dependencies:
     - json
     - time
 
-Author: [Your Name]
+Author: Jorge Martinez-Gil
 """
 
 import json
