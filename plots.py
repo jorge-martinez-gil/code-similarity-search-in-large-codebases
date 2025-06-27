@@ -207,7 +207,7 @@ def main():
 
     es = Elasticsearch(
         ["http://localhost:9200"],
-        basic_auth=('elastic', 'nGRuZaLMB0zgEHHLFLzz')
+        basic_auth=('elastic', '---')
     )
 
     methods = [
