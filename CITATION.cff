@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Evaluation of Code Similarity Search Strategies in Large-Scale Codebases"
+authors:
+  - family-names: Martinez-Gil
+    given-names: Jorge
+    affiliation: "Software Competence Center Hagenberg GmbH"
+  - family-names: Yin
+    given-names: Shaoyi
+    affiliation: "Paul Sabatier University, IRIT Laboratory"
+license: MIT
+repository-code: "https://github.com/jorge-martinez-gil/code-similarity-search-in-large-codebases"
+preferred-citation:
+  type: book-chapter
+  title: "Evaluation of Code Similarity Search Strategies in Large-Scale Codebases"
+  authors:
+    - family-names: Martinez-Gil
+      given-names: Jorge
+      affiliation: "Software Competence Center Hagenberg GmbH"
+    - family-names: Yin
+      given-names: Shaoyi
+      affiliation: "Paul Sabatier University, IRIT Laboratory"
+  booktitle: "Transactions on Large-Scale Data- and Knowledge-Centered Systems LVII"
+  editors:
+    - family-names: Hameurlain
+      given-names: Abdelkader
+    - family-names: Tjoa
+      given-names: A. Min
+  publisher: "Springer Berlin Heidelberg"
+  address: "Berlin, Heidelberg"
+  year: 2025
+  start: 99
+  end: 113
+  isbn: "978-3-662-70140-9"
+  doi: "10.1007/978-3-662-70140-9_4"
+  url: "https://doi.org/10.1007/978-3-662-70140-9_4"

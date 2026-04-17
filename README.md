@@ -3,7 +3,9 @@
 
 [![DOI](https://img.shields.io/badge/DOI-10.1007%2F978--3--662--70140--9__4-blue)](https://doi.org/10.1007/978-3-662-70140-9_4)
 [![Springer](https://img.shields.io/badge/Published%20in-TLDKS%20LVII-orange)](https://link.springer.com/chapter/10.1007/978-3-662-70140-9_4)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE) 
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://www.python.org/)
+[![GitHub Stars](https://img.shields.io/github/stars/jorge-martinez-gil/code-similarity-search-in-large-codebases)](https://github.com/jorge-martinez-gil/code-similarity-search-in-large-codebases/stargazers)
 
 **Authors:** [Jorge Martinez-Gil](https://www.scch.at/) (Software Competence Center Hagenberg GmbH) & [Shaoyi Yin](https://www.irit.fr/) (Paul Sabatier University, IRIT Laboratory)
 
@@ -53,11 +55,53 @@ This project utilizes the **BigCloneBench** dataset, a standard benchmark for co
 
 -   **Source:** [CodeXGLUE / BigCloneBench](https://github.com/microsoft/CodeXGLUE/tree/main/Code-Code/Clone-detection-BigCloneBench)  
 
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.8 or higher
+- A running [Elasticsearch](https://www.elastic.co/downloads/elasticsearch) instance (optional, required for Elasticsearch-based scripts)
+
+### Installation
+
+```bash
+pip install -r requirements.txt
+```
+
+### Usage
+
+| Script | Description |
+| :--- | :--- |
+| `all.py` | Runs a full benchmark of all search methods (FAISS, Annoy, HNSWlib, Scikit-learn, Elasticsearch) using TF-IDF vectorization and plots the results. |
+| `indexing.py` | Measures and compares indexing time for each backend across different dataset sizes. |
+| `performance.py` | Benchmarks query latency and throughput for all search methods and prints results. |
+| `plots.py` | Benchmarks search methods and saves performance plots as TikZ files for use in LaTeX. |
+| `testcodebert.py` | Compares TF-IDF and CodeBERT vectorization strategies with multiple search backends. |
+
+**Examples:**
+
+```bash
+# Benchmark all search methods and generate comparison plots
+python all.py
+
+# Measure indexing time across dataset sizes
+python indexing.py
+
+# Benchmark query performance
+python performance.py
+
+# Generate TikZ plots for LaTeX
+python plots.py
+
+# Run CodeBERT-based evaluation
+python testcodebert.py
+```
+
+> **Note:** Scripts expect a JSONL data file at `data/data.jsonl`. Each line must contain a JSON object with a `"func"` field holding a code snippet.
+
 ## 📝 Citation
 
 If you use this code or our findings in your research, please cite the following paper:
-
-Fragmento de código
 
 ```
 @inbook{Martinez-Gil2025,
