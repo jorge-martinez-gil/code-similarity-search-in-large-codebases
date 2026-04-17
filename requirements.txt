@@ -1,0 +1,12 @@
+numpy
+scikit-learn
+faiss-cpu
+annoy
+hnswlib
+elasticsearch
+transformers
+torch
+scann
+matplotlib
+tikzplotlib
+tqdm
