@@ -5,7 +5,6 @@
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://www.python.org/)
 [![GitHub Stars](https://img.shields.io/github/stars/jorge-martinez-gil/code-similarity-search-in-large-codebases)](https://github.com/jorge-martinez-gil/code-similarity-search-in-large-codebases/stargazers)
-[![CI](https://github.com/jorge-martinez-gil/code-similarity-search-in-large-codebases/actions/workflows/ci.yml/badge.svg)](https://github.com/jorge-martinez-gil/code-similarity-search-in-large-codebases/actions/workflows/ci.yml)
 
 > **TL;DR** — We systematically benchmark 6 approximate nearest-neighbour engines (Annoy, Elasticsearch, FAISS, HNSWlib, ScaNN, scikit-learn) paired with both TF-IDF and CodeBERT embeddings on the BigCloneBench dataset. Key finding: **FAISS** offers the best scalability; **CodeBERT** gives the highest semantic accuracy; **Elasticsearch** leads on raw query speed.
 
