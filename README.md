@@ -121,18 +121,13 @@ For authenticated setups, copy `.env.example` to `.env` and configure `ES_HOST`,
 ## 📝 Citation
 
 ```bibtex
-@inbook{Martinez-Gil2025,
-  author    = {Martinez-Gil, Jorge and Yin, Shaoyi},
-  editor    = {Hameurlain, Abdelkader and Tjoa, A. Min},
-  title     = {Evaluation of Code Similarity Search Strategies in Large-Scale Codebases},
-  booktitle = {Transactions on Large-Scale Data- and Knowledge-Centered Systems LVII},
-  year      = {2025},
-  publisher = {Springer Berlin Heidelberg},
-  address   = {Berlin, Heidelberg},
-  pages     = {99--113},
-  isbn      = {978-3-662-70140-9},
-  doi       = {10.1007/978-3-662-70140-9_4},
-  url       = {https://doi.org/10.1007/978-3-662-70140-9_4}
+@incollection{martinez2024evaluation,
+  title={Evaluation of Code Similarity Search Strategies in Large-Scale Codebases},
+  author={Martinez-Gil, Jorge and Yin, Shaoyi},
+  booktitle={Transactions on Large-Scale Data-and Knowledge-Centered Systems LVII},
+  pages={99--113},
+  year={2024},
+  publisher={Springer}
 }
 ```
 
