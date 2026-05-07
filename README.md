@@ -1,4 +1,3 @@
-
 # Evaluation of Code Similarity Search Strategies in Large-Scale Codebases
 
 [![DOI](https://img.shields.io/badge/DOI-10.1007%2F978--3--662--70140--9__4-blue)](https://doi.org/10.1007/978-3-662-70140-9_4)
@@ -6,29 +5,25 @@
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://www.python.org/)
 [![GitHub Stars](https://img.shields.io/github/stars/jorge-martinez-gil/code-similarity-search-in-large-codebases)](https://github.com/jorge-martinez-gil/code-similarity-search-in-large-codebases/stargazers)
+[![CI](https://github.com/jorge-martinez-gil/code-similarity-search-in-large-codebases/actions/workflows/ci.yml/badge.svg)](https://github.com/jorge-martinez-gil/code-similarity-search-in-large-codebases/actions/workflows/ci.yml)
 
-**Authors:** [Jorge Martinez-Gil](https://www.scch.at/) (Software Competence Center Hagenberg GmbH) & [Shaoyi Yin](https://www.irit.fr/) (Paul Sabatier University, IRIT Laboratory)
+> **TL;DR** — We systematically benchmark 6 approximate nearest-neighbour engines (Annoy, Elasticsearch, FAISS, HNSWlib, ScaNN, scikit-learn) paired with both TF-IDF and CodeBERT embeddings on the BigCloneBench dataset. Key finding: **FAISS** offers the best scalability; **CodeBERT** gives the highest semantic accuracy; **Elasticsearch** leads on raw query speed.
 
----
+## 📖 Abstract
 
-## 📖 Overview
+This repository accompanies the Springer TLDKS LVII paper *Evaluation of Code Similarity Search Strategies in Large-Scale Codebases* and provides reproducible scripts for benchmarking source-code retrieval pipelines at scale. We evaluate lexical and semantic representations (TF-IDF and CodeBERT) combined with multiple ANN/vector-search engines and report indexing cost, query efficiency, and practical trade-offs for large software corpora.
 
-Automatically identifying similar code fragments in large repositories is essential for **code reuse**, **debugging**, and **software maintenance**. While multiple code similarity search solutions exist, systematic comparisons remain limited. 
+## 🏗️ Architecture
 
-This repository contains the source code and benchmark results for our paper, **"Evaluation of Code Similarity Search Strategies in Large-Scale Codebases"**. We present an empirical evaluation of both classical and emerging code similarity search techniques, focusing on practical performance in real-world large-scale codebases using **BigCloneBench**.
+```text
+Raw JSONL ──► Vectorization ──► Index Construction ──► Query Benchmarking ──► Results & Plots
+                (TF-IDF /           (FAISS / Annoy /        (latency, throughput,
+                CodeBERT)           HNSW / SKLNN /           relevance metrics)
+                                    Elasticsearch /
+                                    ScaNN)
+```
 
-> **Read the full paper:** [Transactions on Large-Scale Data- and Knowledge-Centered Systems LVII (Springer)](https://link.springer.com/chapter/10.1007/978-3-662-70140-9_4)
-
-## 🚀 Key Contributions
-
-* **Systematic Benchmarking:** A comparative analysis of traditional (TF-IDF) vs. modern (CodeBERT) vectorization techniques.
-* **Algorithm Evaluation:** Performance metrics for 6 popular similarity search methods (Annoy, FAISS, HNSW, etc.).
-* **Multi-Metric Analysis:** Evaluation across **indexing time**, **search speed**, and **semantic relevance**.
-* **Scalability Insights:** Guidance on selecting strategies for massive codebases.
-
-## 🛠 Methods Evaluated
-
-We evaluated the following strategies combined with **TF-IDF** and **CodeBERT** vectorization:
+## 🛠️ Methods Evaluated
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
@@ -37,73 +32,95 @@ We evaluated the following strategies combined with **TF-IDF** and **CodeBERT** 
 | **FAISS** | Clustering/Quantization | Facebook AI Similarity Search; efficient high-dimensional search. |
 | **HNSW** | Graph-based | Hierarchical Navigable Small World graphs. |
 | **ScaNN** | Quantization | Google's Scalable Nearest Neighbors with partitioning. |
-| **SKLNN** | Brute/Tree | Scikit-learn's general-purpose nearest neighbor algorithms. |
+| **SKLNN** | Brute/Tree | scikit-learn nearest-neighbor algorithms. |
 
-## 📊 Key Findings
+## 📊 Key Results
 
-Our experiments on the [BigCloneBench](https://github.com/microsoft/CodeXGLUE/tree/main/Code-Code/Clone-detection-BigCloneBench) dataset revealed:
+| Finding | Summary |
+| :--- | :--- |
+| Semantic quality | CodeBERT improves semantic relevance versus TF-IDF across backends. |
+| Query speed | Elasticsearch provides the best raw query latency in the reported experiments. |
+| Scalability | FAISS offers the strongest scalability profile for very large indexes. |
+| Simplicity | scikit-learn is a strong baseline for small/medium datasets. |
 
-1.  **Accuracy:** **CodeBERT** achieves the highest semantic accuracy and remains stable as dataset size increases.
-2.  **Query Speed:** **Elasticsearch** provides the fastest query times, though with higher indexing overhead.
-3.  **Scalability:** **FAISS** demonstrates the best long-term scalability for massive datasets.
-4.  **Small Data:** **SKLNN** is highly effective and simple for smaller datasets but struggles to scale.
+## 📂 Repository Structure
 
+```text
+.
+├── .github/workflows/ci.yml            # CI smoke tests and optional pytest
+├── all.py                              # End-to-end benchmark + plots
+├── indexing.py                         # Indexing-time benchmark
+├── performance.py                      # Latency/QPS benchmark
+├── plots.py                            # Benchmark plotting utility
+├── testcodebert.py                     # TF-IDF vs CodeBERT benchmark
+├── examples/quickstart.py              # Self-contained quickstart demo
+├── src/similarity_search/utils.py      # Shared benchmark/data helpers
+├── tests/test_utils.py                 # Unit tests for shared helpers
+├── docs/ARCHITECTURE.md                # System architecture details
+├── docs/RESULTS.md                     # Reproducible results summary
+├── requirements.txt                    # Reproducible runtime dependencies
+├── pyproject.toml                      # Modern packaging metadata
+├── CONTRIBUTING.md                     # Contribution guide
+└── CHANGELOG.md                        # Release history
+```
 
-## 📂 Dataset
+## ⚡ Quick Start
 
-This project utilizes the **BigCloneBench** dataset, a standard benchmark for code clone detection.
+```bash
+python -m pip install -r requirements.txt
+python examples/quickstart.py
+```
 
--   **Source:** [CodeXGLUE / BigCloneBench](https://github.com/microsoft/CodeXGLUE/tree/main/Code-Code/Clone-detection-BigCloneBench)  
-
-## 🚀 Getting Started
+## 🚀 Full Reproducibility Guide
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- A running [Elasticsearch](https://www.elastic.co/downloads/elasticsearch) instance (optional, required for Elasticsearch-based scripts)
+- Python 3.8+
+- BigCloneBench JSONL data (CodeXGLUE format)
+- Optional: Elasticsearch 8.x for Elasticsearch experiments
 
 ### Installation
 
 ```bash
+pip install -e .
+# or
 pip install -r requirements.txt
 ```
 
-### Usage
+### Dataset Setup
 
-| Script | Description |
-| :--- | :--- |
-| `all.py` | Runs a full benchmark of all search methods (FAISS, Annoy, HNSWlib, Scikit-learn, Elasticsearch) using TF-IDF vectorization and plots the results. |
-| `indexing.py` | Measures and compares indexing time for each backend across different dataset sizes. |
-| `performance.py` | Benchmarks query latency and throughput for all search methods and prints results. |
-| `plots.py` | Benchmarks search methods and saves performance plots as TikZ files for use in LaTeX. |
-| `testcodebert.py` | Compares TF-IDF and CodeBERT vectorization strategies with multiple search backends. |
+1. Download BigCloneBench from CodeXGLUE.
+2. Place the file at `data/data.jsonl`.
+3. Ensure each line has JSON with a `func` field.
 
-**Examples:**
+### Running Experiments
 
 ```bash
-# Benchmark all search methods and generate comparison plots
-python all.py
-
-# Measure indexing time across dataset sizes
-python indexing.py
-
-# Benchmark query performance
-python performance.py
-
-# Generate TikZ plots for LaTeX
-python plots.py
-
-# Run CodeBERT-based evaluation
-python testcodebert.py
+python all.py --data data/data.jsonl --k 3 --trials 100
+python indexing.py --data data/data.jsonl --sizes 100 1000 10000
+python performance.py --data data/data.jsonl --query "for(int i=0;i<n;i++){sum+=i;}"
+python plots.py --data data/data.jsonl --time-plot search_time_comparison.tex
+python testcodebert.py --data data/data.jsonl --trials 100
 ```
 
-> **Note:** Scripts expect a JSONL data file at `data/data.jsonl`. Each line must contain a JSON object with a `"func"` field holding a code snippet.
+### Elasticsearch Setup
+
+```bash
+docker run -p 9200:9200 -e discovery.type=single-node -e xpack.security.enabled=false docker.elastic.co/elasticsearch/elasticsearch:8.14.0
+```
+
+For authenticated setups, copy `.env.example` to `.env` and configure `ES_HOST`, `ES_USER`, and `ES_PASSWORD`.
+
+## 🔬 Extending the Benchmark
+
+1. Add backend-specific index/search functions in benchmark scripts.
+2. Reuse `read_code_snippets` and `benchmark_search` from `src/similarity_search/utils.py`.
+3. Add reproducible output and update docs/results tables.
+4. Include tests for any shared utilities.
 
 ## 📝 Citation
 
-If you use this code or our findings in your research, please cite the following paper:
-
-```
+```bibtex
 @inbook{Martinez-Gil2025,
   author    = {Martinez-Gil, Jorge and Yin, Shaoyi},
   editor    = {Hameurlain, Abdelkader and Tjoa, A. Min},
@@ -115,7 +132,14 @@ If you use this code or our findings in your research, please cite the following
   pages     = {99--113},
   isbn      = {978-3-662-70140-9},
   doi       = {10.1007/978-3-662-70140-9_4},
-  url       = {[https://doi.org/10.1007/978-3-662-70140-9_4](https://doi.org/10.1007/978-3-662-70140-9_4)}
+  url       = {https://doi.org/10.1007/978-3-662-70140-9_4}
 }
-
 ```
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## 📄 License
+
+MIT. See [LICENSE](LICENSE).

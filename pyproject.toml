@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "code-similarity-search"
+version = "1.0.0"
+description = "Benchmark suite for evaluating code similarity search strategies in large-scale codebases"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+  {name = "Jorge Martinez-Gil", email = "jorge.martinez-gil@scch.at"},
+  {name = "Shaoyi Yin"},
+]
+keywords = ["code similarity", "nearest neighbor search", "CodeBERT", "FAISS", "software engineering"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.8"
+dependencies = [
+  "numpy>=1.23",
+  "scikit-learn>=1.2",
+  "faiss-cpu>=1.7",
+  "annoy>=1.17",
+  "hnswlib>=0.7",
+  "elasticsearch>=8.0",
+  "transformers>=4.48",
+  "torch>=2.6",
+  "matplotlib>=3.6",
+  "tikzplotlib>=0.10",
+  "tqdm>=4.64",
+  "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "black>=26.3.1", "isort", "flake8", "mypy"]
+notebook = ["jupyter", "ipywidgets"]
+
+[project.urls]
+"Homepage" = "https://github.com/jorge-martinez-gil/code-similarity-search-in-large-codebases"
+"Paper" = "https://doi.org/10.1007/978-3-662-70140-9_4"
+"Bug Tracker" = "https://github.com/jorge-martinez-gil/code-similarity-search-in-large-codebases/issues"
