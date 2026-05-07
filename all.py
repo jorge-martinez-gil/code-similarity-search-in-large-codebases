@@ -1,68 +1,64 @@
-import json
-import time
-import matplotlib.pyplot as plt
-import tikzplotlib
-from elasticsearch import Elasticsearch
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.preprocessing import normalize
-from sklearn.decomposition import TruncatedSVD
-import numpy as np
+"""Run a full benchmark across all supported TF-IDF search backends."""
+
+import argparse
+import os
+
 import faiss
-from annoy import AnnoyIndex
 import hnswlib
-from tqdm import tqdm
+import matplotlib.pyplot as plt
+import numpy as np
+from annoy import AnnoyIndex
+from dotenv import load_dotenv
+from elasticsearch import Elasticsearch
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import normalize
 
-def benchmark_search(function, args, num_trials=100):
-    start_time = time.time()
-    for _ in tqdm(range(num_trials), desc='Processing searches'):
-        results = function(*args)
-    elapsed_time = time.time() - start_time
-    throughput = num_trials / elapsed_time
-    return elapsed_time / num_trials, throughput
+from src.similarity_search.utils import benchmark_search, read_code_snippets
 
-def read_code_snippets(filename):
-    code_snippets = []
-    with open(filename, 'r') as file:
-        for line in file:
-            data = json.loads(line)
-            code_snippet = data["func"]
-            code_snippets.append(code_snippet)
-    return code_snippets
+try:
+    import tikzplotlib
+except ImportError:  # pragma: no cover - environment-dependent optional dependency
+    tikzplotlib = None
+
 
 def vectorize_snippets(code_snippets):
     vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(code_snippets).toarray()
+    tfidf_matrix = vectorizer.fit_transform(code_snippets).toarray().astype(np.float32)
     return tfidf_matrix, vectorizer
 
-def faiss_search(tfidf_matrix, query_vector, k):
-    dimension = tfidf_matrix.shape[1]
-    index = faiss.IndexFlatL2(dimension)
-    index.add(tfidf_matrix.astype(np.float32))
-    _, I = index.search(query_vector, k)
-    return I
 
-def annoy_search(tfidf_matrix , query_vector, k, dimension):
-    index = AnnoyIndex(dimension, 'angular')
+def faiss_search(tfidf_matrix, query_vector, k):
+    index = faiss.IndexFlatL2(tfidf_matrix.shape[1])
+    index.add(tfidf_matrix)
+    _, indices = index.search(query_vector, k)
+    return indices
+
+
+def annoy_search(tfidf_matrix, query_vector, k, dimension):
+    index = AnnoyIndex(dimension, "angular")
     for i, vector in enumerate(tfidf_matrix):
         index.add_item(i, vector)
     index.build(10)
-    I = index.get_nns_by_vector(query_vector[0], k, include_distances=False)
-    return I
+    return index.get_nns_by_vector(query_vector[0], k, include_distances=False)
 
-def hnsw_search(tfidf_matrix, query_vector, k, space='l2', dimension=None):
+
+def hnsw_search(tfidf_matrix, query_vector, k, space="l2", dimension=None):
     dimension = dimension or tfidf_matrix.shape[1]
-    p = hnswlib.Index(space=space, dim=dimension)
-    p.init_index(max_elements=len(tfidf_matrix), ef_construction=200, M=16)
-    p.add_items(tfidf_matrix)
-    p.set_ef(200)  # ef should always be > k
-    labels, distances = p.knn_query(query_vector, k)
+    index = hnswlib.Index(space=space, dim=dimension)
+    index.init_index(max_elements=len(tfidf_matrix), ef_construction=200, M=16)
+    index.add_items(tfidf_matrix)
+    index.set_ef(200)
+    labels, _ = index.knn_query(query_vector, k)
     return labels
 
+
 def sklearn_search(tfidf_matrix, query_vector, k):
-    nn = NearestNeighbors(n_neighbors=k, algorithm='auto').fit(tfidf_matrix)
-    distances, indices = nn.kneighbors(query_vector)
+    nn = NearestNeighbors(n_neighbors=k, algorithm="auto").fit(tfidf_matrix)
+    _, indices = nn.kneighbors(query_vector)
     return indices
+
 
 def elastic_search(es, index_name, query_vector, k):
     script_query = {
@@ -70,60 +66,80 @@ def elastic_search(es, index_name, query_vector, k):
             "query": {"match_all": {}},
             "script": {
                 "source": "cosineSimilarity(params.query_vector, 'vector') + 1.0",
-                "params": {"query_vector": query_vector.tolist()}
-            }
+                "params": {"query_vector": query_vector.tolist()},
+            },
         }
     }
     response = es.search(index=index_name, body={"query": script_query, "size": k})
     return [hit["_source"]["snippet"] for hit in response["hits"]["hits"]]
 
+
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data", default=os.path.join("data", "data.jsonl"))
+    parser.add_argument("--query", default="int result = 1; for (int i = 1; i <= n; i++) { result *= i; }")
+    parser.add_argument("--k", type=int, default=3)
+    parser.add_argument("--trials", type=int, default=100)
+    parser.add_argument("--es-index", default="code_snippets_index99")
+    parser.add_argument("--time-plot", default="search_time_comparison.tex")
+    parser.add_argument("--throughput-plot", default="search_throughput_comparison.tex")
+    return parser.parse_args()
+
+
 def main():
-    filename = "data\data.jsonl"
-    query_snippet = "int result = 1; for (int i = 1; i <= n; i++) { result *= i; }"
-    code_snippets = read_code_snippets(filename)
+    load_dotenv()
+    args = parse_args()
+    code_snippets = read_code_snippets(args.data)
     tfidf_matrix, vectorizer = vectorize_snippets(code_snippets)
-    query_vector = vectorizer.transform([query_snippet]).toarray().astype(np.float32)
+    query_vector = vectorizer.transform([args.query]).toarray().astype(np.float32)
 
     es = Elasticsearch(
-        ["http://localhost:9200"],
-        basic_auth=('elastic', 'nGRuZaLMB0zgEHHLFLzz')
+        [os.environ.get("ES_HOST", "http://localhost:9200")],
+        basic_auth=(
+            os.environ.get("ES_USER", "elastic"),
+            os.environ.get("ES_PASSWORD", ""),
+        ),
     )
 
     methods = [
-        ("FAISS", faiss_search, (tfidf_matrix, query_vector, 3)),
-        ("Annoy", annoy_search, (tfidf_matrix, query_vector, 3, tfidf_matrix.shape[1])),
-        ("HNSWlib", hnsw_search, (tfidf_matrix, query_vector, 3)),
-        ("Scikit-learn", sklearn_search, (tfidf_matrix, query_vector, 3))
+        ("FAISS", faiss_search, (tfidf_matrix, query_vector, args.k)),
+        ("Annoy", annoy_search, (tfidf_matrix, query_vector, args.k, tfidf_matrix.shape[1])),
+        ("HNSWlib", hnsw_search, (tfidf_matrix, query_vector, args.k)),
+        ("Scikit-learn", sklearn_search, (tfidf_matrix, query_vector, args.k)),
     ]
 
-    svd = TruncatedSVD(n_components=4096)
+    svd = TruncatedSVD(n_components=min(4096, tfidf_matrix.shape[1] - 1))
     svd.fit(tfidf_matrix)
-    normalized_query_vector = normalize(svd.transform(vectorizer.transform([query_snippet]).toarray()), norm='l2')
-    methods.append(("Elastic", elastic_search, (es, "code_snippets_index99", normalized_query_vector[0], 3)))
+    normalized_query_vector = normalize(svd.transform(vectorizer.transform([args.query]).toarray()), norm="l2")
+    methods.append(("Elastic", elastic_search, (es, args.es_index, normalized_query_vector[0], args.k)))
 
-    times = []
-    throughputs = []
-
-    for name, function, args in methods:
-        avg_time, throughput = benchmark_search(function, args)
+    times, throughputs = [], []
+    for name, function, method_args in methods:
+        avg_time, throughput = benchmark_search(function, method_args, num_trials=args.trials, desc=name)
         times.append(avg_time)
         throughputs.append(throughput)
         print(f"{name}: {avg_time:.4f} sec/query, {throughput:.2f} queries/sec")
 
-    # Plotting
     plt.figure(figsize=(10, 5))
-    plt.bar([method[0] for method in methods], times, color='blue')
-    plt.xlabel('Search Method')
-    plt.ylabel('Average Time per Query (s)')
-    plt.title('Search Performance Comparison')
-    tikzplotlib.save("search_time_comparison.tex")
+    plt.bar([method[0] for method in methods], times, color="blue")
+    plt.xlabel("Search Method")
+    plt.ylabel("Average Time per Query (s)")
+    plt.title("Search Performance Comparison")
+    if tikzplotlib:
+        tikzplotlib.save(args.time_plot)
+    else:
+        plt.savefig(args.time_plot.replace(".tex", ".png"))
 
     plt.figure(figsize=(10, 5))
-    plt.bar([method[0] for method in methods], throughputs, color='green')
-    plt.xlabel('Search Method')
-    plt.ylabel('Queries per Second')
-    plt.title('Search Throughput Comparison')
-    tikzplotlib.save("search_throughput_comparison.tex")
+    plt.bar([method[0] for method in methods], throughputs, color="green")
+    plt.xlabel("Search Method")
+    plt.ylabel("Queries per Second")
+    plt.title("Search Throughput Comparison")
+    if tikzplotlib:
+        tikzplotlib.save(args.throughput_plot)
+    else:
+        plt.savefig(args.throughput_plot.replace(".tex", ".png"))
+
 
 if __name__ == "__main__":
     main()
